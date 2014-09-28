@@ -4,6 +4,11 @@ import os
 import argparse
 import pickle
 
+def write_essay(length):
+    sentences = [ generate_sentence() for _ in range(length) ]
+    sentences = map(str.capitalize, sentences)
+    return str.join('. ', sentences) + '.\n'
+
 def generate_sentence():
     words = [random.choice(list(bigrams.keys()))]
 
@@ -133,6 +138,3 @@ if __name__ == '__main__':
         refresh_dictionaries()
     else:
         unpickle_dictionaries()
-        
-
-
