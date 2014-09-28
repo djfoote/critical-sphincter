@@ -20,7 +20,7 @@ def generate_sentence():
         words.append(next_word)
 
     while True:
-        next_word = next_from_q(words[-3:])
+        next_word = next_from_q(words[-3:], len(words))
         if not next_word:
             break
         words.append(next_word)
@@ -41,11 +41,25 @@ def next_from_t(prev):
     return next_from_b(prev[1])
 
 # next_from_q :: [word, word, word] -> word
-def next_from_q(prev):
+def next_from_q(prev, word_count):
     prev_tup = tuple(prev)
     if prev_tup in quadgrams:
+        if word_count > 10:
+            for ender in enders:
+                if ender in quadgrams[prev_tup]:
+                    return ender
         return random.choice(quadgrams[prev_tup])
     return next_from_t(prev[1:])
+
+def generate_sentence_enders():
+    return [ w 
+        for w in flatten(list(bigrams.values())) if w not in bigrams.keys() ]
+
+def flatten(list_of_lists):
+    result = []
+    for lst in list_of_lists:
+        result.extend(lst)
+    return result
 
 def refresh_dictionaries():
     def get_all(ngram):
@@ -79,6 +93,7 @@ def refresh_dictionaries():
         else:
             quadgrams[(words[0], words[1], words[2])] = [words[3]]
 
+    enders.extend(generate_sentence_enders())
     pickle_dictionaries()
 
 def unpickle_dictionaries():
@@ -88,14 +103,18 @@ def unpickle_dictionaries():
         trigrams.update(pickle.load(infile))
     with open('quadgram_dict', 'rb') as infile:
         quadgrams.update(pickle.load(infile))
+    with open('enders_list', 'rb') as infile:
+        enders.extend(pickle.load(infile))
 
 def pickle_dictionaries():
     with open('bigram_dict', 'wb') as outfile:
         pickle.dump(bigrams, outfile)
     with open('trigram_dict', 'wb') as outfile:
         pickle.dump(trigrams, outfile)
-    with open('quadgram_dict', 'wb') as outfile:
+    with open('quadgram_dict ', 'wb') as outfile:
         pickle.dump(quadgrams, outfile)
+    with open('enders_list', 'wb') as outfile:
+        pickle.dump(enders, outfile)
 
 
 if __name__ == '__main__':
@@ -108,6 +127,7 @@ if __name__ == '__main__':
     bigrams   = {} #  word              -> [word]
     trigrams  = {} # (word, word)       -> [word]
     quadgrams = {} # (word, word, word) -> [word]
+    enders    = [] # words that end sentences
 
     if args.refresh_dictionaries:
         refresh_dictionaries()
